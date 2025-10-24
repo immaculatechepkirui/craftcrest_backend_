@@ -85,12 +85,6 @@ class CustomDesignRequest(models.Model):
 
 
 class ArtisanUploadImage(models.Model):
-    """
-    Images uploaded by an artisan for a CustomDesignRequest.
-
-    - artisan: explicit FK to the uploading user, limited to users with user_type 'artisan'
-    - validation: ensures the user is an artisan and (optionally) matches the request.artisan
-    """
     custom_request = models.ForeignKey(CustomDesignRequest, on_delete=models.CASCADE, related_name='artisan_uploads')
     artisan = models.ForeignKey(
         settings.AUTH_USER_MODEL,
