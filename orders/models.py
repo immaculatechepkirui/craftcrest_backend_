@@ -90,7 +90,9 @@ class ArtisanUploadImage(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='uploaded_images',
-        limit_choices_to={'user_type': 'artisan'}
+        limit_choices_to={'user_type': 'artisan'},
+        null=True,  
+        blank=True
     )
     image = models.ImageField(upload_to='order_images/')
 
