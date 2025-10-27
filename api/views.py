@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import NotFound
 from django.core.exceptions import ValidationError
+from .permissions import IsOwnerOrAdmin
 
 from users.models import User, ArtisanPortfolio, Profile
 import django_filters.rest_framework
@@ -141,15 +142,17 @@ class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
     queryset = ArtisanPortfolio.objects.all()
     serializer_class = ArtisanPortfolioSerializer
     parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]  # object-level permission enforced
 
+    # optional convenience endpoint: keep or remove. It delegates to partial_update
     @action(detail=True, methods=['patch'], parser_classes=[MultiPartParser, FormParser])
     def add_images(self, request, pk=None):
-        portfolio = self.get_object()
-        serializer = self.get_serializer(portfolio, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(self.get_serializer(portfolio).data)
+        """
+        Convenience endpoint to add images (and/or other partial changes).
+        Accepts multipart/form-data with image_files[] for files and optional image_ids_to_delete JSON array.
+        This simply delegates to the same serializer partial update logic.
+        """
+        return self.partial_update(request, pk)
 
     def get_queryset(self):
         user = self.request.user
@@ -165,6 +168,7 @@ class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({"detail": "Only artisans can create portfolios."})
         serializer.save(artisan=user)
         logger = logging.getLogger(__name__)
+        logger.debug(f"Portfolio created by {user}")
 
 class NearbyArtisansView(APIView):
     def post(self, request):

@@ -11,7 +11,6 @@ from rest_framework.authtoken.models import Token
 from users.models import User, ArtisanPortfolio, Profile, PortfolioImage, ArtisanProfile
 from users.utils import send_otp_email
 from rest_framework import serializers
-from django.conf import settings
 import requests
 from products.models import Inventory
 from cart.models import ShoppingCart , Item
@@ -35,13 +34,18 @@ class ArtisanPortfolioSerializer(serializers.ModelSerializer):
     image_files = serializers.ListField(
         child=serializers.ImageField(),
         write_only=True,
-        required=False,   
+        required=False,
+    )
+    image_ids_to_delete = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
     )
     images = PortfolioImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = ArtisanPortfolio
-        fields = ["id", "title", "description", "created_at", "image_files", "images", "artisan"]
+        fields = ["id", "title", "description", "created_at", "image_files", "image_ids_to_delete", "images", "artisan"]
         read_only_fields = ["id", "created_at", "images", "artisan"]
 
     def create(self, validated_data):
@@ -49,29 +53,49 @@ class ArtisanPortfolioSerializer(serializers.ModelSerializer):
         artisan = validated_data.pop("artisan", None)
         if artisan is None:
             raise serializers.ValidationError({"artisan": "Artisan is required to create a portfolio."})
+
         portfolio = ArtisanPortfolio.objects.create(artisan=artisan, **validated_data)
+
         for image_file in image_files:
             PortfolioImage.objects.create(portfolio=portfolio, image=image_file)
+
         return portfolio
 
     def validate(self, attrs):
-        if not attrs.get("title"):
-            raise serializers.ValidationError({"title": "Title is required."})
-        if not attrs.get("description"):
-            raise serializers.ValidationError({"description": "Description is required."})
         if self.instance is None:
+            if not attrs.get("title"):
+                raise serializers.ValidationError({"title": "Title is required."})
+            if not attrs.get("description"):
+                raise serializers.ValidationError({"description": "Description is required."})
             image_files = attrs.get("image_files", [])
             if len(image_files) < 10:
                 raise serializers.ValidationError({
                     "image_files": "At least 10 images are required for the portfolio."
                 })
+            return attrs
+
         return attrs
 
     def update(self, instance, validated_data):
         image_files = validated_data.pop("image_files", None)
+        image_ids_to_delete = validated_data.pop("image_ids_to_delete", None)
+
+        current_count = instance.images.count() if hasattr(instance, "images") else PortfolioImage.objects.filter(portfolio=instance).count()
+        num_to_delete = len(image_ids_to_delete) if image_ids_to_delete else 0
+        num_to_add = len(image_files) if image_files else 0
+        resulting_count = current_count - num_to_delete + num_to_add
+
+        if resulting_count < 10:
+            raise serializers.ValidationError({
+                "images": "Portfolio must have at least 10 images after this update."
+            })
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        if image_ids_to_delete:
+            PortfolioImage.objects.filter(id__in=image_ids_to_delete, portfolio=instance).delete()
 
         if image_files:
             for image_file in image_files:
