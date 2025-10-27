@@ -19,6 +19,34 @@ from datetime import timedelta
 from decouple import config
 
 
+
+
+
+
+
+
+# Use Cloudinary for Django file storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+# Optional: set MEDIA_URL (cloudinary_storage will serve cloud URLs)
+MEDIA_URL = '/media/'
+
+
+
+
+
+
+
+
+
+
+
 load_dotenv()  
 SECRET_KEY = os.getenv('SECRET_KEY')
 
@@ -50,7 +78,6 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
 
 
 
-MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
@@ -85,6 +112,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'drf_yasg',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [

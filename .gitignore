@@ -77,3 +77,5 @@ coverage.xml
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+.env
+db.sqlite3.bak
