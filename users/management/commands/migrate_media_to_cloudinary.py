@@ -68,3 +68,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Re-saved {count} OrderStatus images.'))
 
         self.stdout.write(self.style.SUCCESS('Done.'))
+
+
+        
