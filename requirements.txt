@@ -19,7 +19,7 @@ click==8.0.3
 colorama==0.4.4
 comm==0.2.2
 cryptography==3.4.8
-dbus-python==1.2.18
+dbus-python==<latest-compatible>
 debugpy==1.8.14
 decorator==5.2.1
 defer==1.0.4
@@ -92,7 +92,7 @@ pandocfilters==1.5.1
 paramiko==2.9.3
 parso==0.8.4
 pexpect==4.8.0
-Pillow==9.0.1
+Pillow>=10.0.0
 platformdirs==4.3.8
 prometheus_client==0.22.1
 prompt_toolkit==3.0.51
@@ -100,9 +100,9 @@ protobuf==3.12.4
 psutil==7.0.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
-pycairo==1.20.1
+pycairo==<latest-compatible>
 pycparser==2.22
-pycups==2.0.1
+pycups==<latest-compatible>
 Pygments==2.11.2
 PyJWT==2.3.0
 pymacaroons==0.13.0
