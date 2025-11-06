@@ -41,7 +41,10 @@ ENV/
 env/
 env.bak/
 venv.bak/
+Miniconda3-latest-Linux-x86_64.sh
 test-env/
+miniconda3/
+envs/
 
 # Pytest cache
 .pytest_cache/
