@@ -19,7 +19,7 @@ click==8.0.3
 colorama==0.4.4
 comm==0.2.2
 cryptography==3.4.8
-dbus-python==<latest-compatible>
+dbus-python==1.2.18
 debugpy==1.8.14
 decorator==5.2.1
 defer==1.0.4
@@ -97,12 +97,12 @@ platformdirs==4.3.8
 prometheus_client==0.22.1
 prompt_toolkit==3.0.51
 protobuf==3.12.4
-psutil==7.0.0
-ptyprocess==0.7.0
+psutil==7.0
+ptyprocess==1.28.0
 pure_eval==0.2.3
-pycairo==<latest-compatible>
+pycairo==1.15.10
 pycparser==2.22
-pycups==<latest-compatible>
+pycups==2.0.1
 Pygments==2.11.2
 PyJWT==2.3.0
 pymacaroons==0.13.0
