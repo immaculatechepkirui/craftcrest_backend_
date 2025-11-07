@@ -98,7 +98,7 @@ prometheus_client==0.22.1
 prompt_toolkit==3.0.51
 protobuf==3.12.4
 psutil==7.0
-ptyprocess==1.28.0
+ptyprocess==0.7.0
 pure_eval==0.2.3
 pycairo==1.15.10
 pycparser==2.22
