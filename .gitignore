@@ -83,3 +83,5 @@ coverage.xml
 .ipynb_checkpoints/
 .env
 db.sqlite3.bak
+.vercel
+Miniconda3-latest-Linux-x86_64.sh
