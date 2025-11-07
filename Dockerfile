@@ -1,5 +1,4 @@
-# Use official Python 3.10 slim image as base
-FROM python:3.10-slim
+FROM python:3.10
 
 # Install system build dependencies needed for your packages
 RUN apt-get update && apt-get install -y \
@@ -25,3 +24,6 @@ COPY . .
 
 # Specify the command to run your app (adjust as needed)
 CMD ["python", "app.py"]
+
+
+RUN apt-get update && apt-get install -y build-essential libdbus-1-dev libcups2-dev libjpeg-dev zlib1g-dev
