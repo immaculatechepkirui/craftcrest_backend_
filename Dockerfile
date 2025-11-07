@@ -1,6 +1,7 @@
-FROM python:3.10
+FROM python:3.9
 
 RUN apt-get update && apt-get install -y \
+    build-essential \
     libdbus-1-dev \
     libcups2-dev \
     libjpeg-dev \
