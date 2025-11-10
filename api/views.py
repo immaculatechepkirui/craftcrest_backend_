@@ -138,6 +138,39 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated, AdminPermission]
 
+class IsArtisanOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS and request.user.is_authenticated:
+            return True
+        return request.user.is_authenticated and request.user.user_type == 'ARTISAN'
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS and request.user.is_authenticated:
+            return True
+        return obj.artisan == request.user
+class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
+    queryset = ArtisanPortfolio.objects.all()
+    serializer_class = ArtisanPortfolioSerializer
+    permission_classes = [IsArtisanOrReadOnly]
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return ArtisanPortfolio.objects.none()
+        if user.user_type == 'ADMIN':
+            return ArtisanPortfolio.objects.all()
+        elif user.user_type == 'ARTISAN':
+            # Artisan sees only own portfolios
+            return ArtisanPortfolio.objects.filter(artisan=user)
+        elif user.user_type == 'BUYER':
+            # Buyer can see all portfolios (optionally filter or restrict as needed)
+            return ArtisanPortfolio.objects.all()
+        else:
+            return ArtisanPortfolio.objects.none()
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not user.is_authenticated or user.user_type != 'ARTISAN':
+            raise PermissionDenied("Only artisans can create portfolios.")
+        serializer.save(artisan=user)
+
 class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
     queryset = ArtisanPortfolio.objects.all()
     serializer_class = ArtisanPortfolioSerializer
@@ -147,11 +180,6 @@ class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
     # optional convenience endpoint: keep or remove. It delegates to partial_update
     @action(detail=True, methods=['patch'], parser_classes=[MultiPartParser, FormParser])
     def add_images(self, request, pk=None):
-        """
-        Convenience endpoint to add images (and/or other partial changes).
-        Accepts multipart/form-data with image_files[] for files and optional image_ids_to_delete JSON array.
-        This simply delegates to the same serializer partial update logic.
-        """
         return self.partial_update(request, pk)
 
     def get_queryset(self):
