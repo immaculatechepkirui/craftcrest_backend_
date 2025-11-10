@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import NotFound
 from django.core.exceptions import ValidationError
 from .permissions import IsOwnerOrAdmin
+from rest_framework.exceptions import PermissionDenied
 
 from users.models import User, ArtisanPortfolio, Profile
 import django_filters.rest_framework
@@ -138,19 +139,12 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated, AdminPermission]
 
-class IsArtisanOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS and request.user.is_authenticated:
-            return True
-        return request.user.is_authenticated and request.user.user_type == 'ARTISAN'
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS and request.user.is_authenticated:
-            return True
-        return obj.artisan == request.user
 class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
     queryset = ArtisanPortfolio.objects.all()
     serializer_class = ArtisanPortfolioSerializer
-    permission_classes = [IsArtisanOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]  # Allow read-only for buyers, full access for owners/admins
+
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
@@ -158,45 +152,19 @@ class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
         if user.user_type == 'ADMIN':
             return ArtisanPortfolio.objects.all()
         elif user.user_type == 'ARTISAN':
-            # Artisan sees only own portfolios
+            # Artisans see only their own portfolios
             return ArtisanPortfolio.objects.filter(artisan=user)
         elif user.user_type == 'BUYER':
-            # Buyer can see all portfolios (optionally filter or restrict as needed)
+            # Buyers can see all portfolios
             return ArtisanPortfolio.objects.all()
         else:
             return ArtisanPortfolio.objects.none()
+
     def perform_create(self, serializer):
         user = self.request.user
         if not user.is_authenticated or user.user_type != 'ARTISAN':
             raise PermissionDenied("Only artisans can create portfolios.")
         serializer.save(artisan=user)
-
-class ArtisanPortfolioViewSet(viewsets.ModelViewSet):
-    queryset = ArtisanPortfolio.objects.all()
-    serializer_class = ArtisanPortfolioSerializer
-    parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]  # object-level permission enforced
-
-    # optional convenience endpoint: keep or remove. It delegates to partial_update
-    @action(detail=True, methods=['patch'], parser_classes=[MultiPartParser, FormParser])
-    def add_images(self, request, pk=None):
-        return self.partial_update(request, pk)
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return ArtisanPortfolio.objects.none()
-        if user.user_type == 'ADMIN':
-            return ArtisanPortfolio.objects.all()
-        return ArtisanPortfolio.objects.filter(artisan=user)
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        if not user.is_authenticated or user.user_type != 'ARTISAN':
-            raise serializers.ValidationError({"detail": "Only artisans can create portfolios."})
-        serializer.save(artisan=user)
-        logger = logging.getLogger(__name__)
-        logger.debug(f"Portfolio created by {user}")
 
 class NearbyArtisansView(APIView):
     def post(self, request):
@@ -242,29 +210,21 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-
-
 class ShoppingCartViewSet(viewsets.ModelViewSet):
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartSerializer
     permission_classes = [IsAuthenticated]
     
-
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
     permission_classes = [IsAuthenticated]
-    
 
     
 class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
     
-    
-   
-    
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer 
