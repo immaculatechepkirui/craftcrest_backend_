@@ -1,4 +1,0 @@
-libcairo2-dev
-pkg-config
-libdbus-1-dev
-libcups2-dev
